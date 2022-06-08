@@ -167,7 +167,7 @@ def make_flex_recept(date, product_name1, product_name2, product_price1, product
                     {
                         "type": "text",
                         "wrap": True,
-                        "text": "※LINE API Use Caseサイトのデモアプリケーションであるため、実際の課金は行われません",
+                        "text": "※デジタル会員証のハンズオンアプリであるため、実際の課金は行われません",
                         "color": "#ff6347"
                     }
                 ]
