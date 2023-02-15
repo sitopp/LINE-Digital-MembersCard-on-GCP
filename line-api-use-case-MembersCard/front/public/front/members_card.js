@@ -1,6 +1,6 @@
-// 環境設定を読み込む
-const FUNCTION_URL = "https://xxxxxx.lambda-url.ap-northeast-1.on.aws/";
-const liffId = "xxx-xxx"
+// 環境設定を読み込む 書き換え★
+const FUNCTION_URL = "https://backend-xxxxxxxxxxx.run.app"; 
+const liffId = "xxxxxxxxx-xxxxxxxxx";
 
 // 言語設定の定数宣言
 const defaultLang = "ja";

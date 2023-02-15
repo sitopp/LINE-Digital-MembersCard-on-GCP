@@ -5,20 +5,21 @@ MembersCardUserInfo操作用モジュール
 import os
 from datetime import datetime
 from dateutil.tz import gettz
+import firebase_admin
+from firebase_admin import credentials
+from firebase_admin import firestore
 
-from aws.dynamodb.base import DynamoDB
 
-
-class MembersCardUserInfo(DynamoDB):
+class MembersCardUserInfo:
     """MembersCardUserInfo操作用クラス"""
-    __slots__ = ['_table']
+    __slots__ = ['_db']
 
     def __init__(self):
         """初期化メソッド"""
-        table_name = os.getenv('MEMBERS_INFO_DB', 'MembersCardUserInfo')
-        super().__init__(table_name)
-        self._table = self._db.Table(table_name)
-
+        cred = credentials.Certificate("./content/key.json")
+        app = firebase_admin.initialize_app(cred)
+        self._db = firestore.client()
+    
     def put_item(self, user_id, barcode_num, expiration_date, point):
         """
         データ登録
@@ -52,11 +53,12 @@ class MembersCardUserInfo(DynamoDB):
         }
 
         try:
-            response = self._put_item(item)
+            doc_ref = self._db.collection('MembersCardUserInfo').document(user_id)
+            doc_ref.set(item)
         except Exception as e:
-            raise e
-        return response
-
+            raise e        
+        return {'result': 'success'}
+       
     def update_point_expiration_date(self, user_id, point, expiration_date):
         """
         ポイントと期限日を更新する
@@ -76,23 +78,18 @@ class MembersCardUserInfo(DynamoDB):
             レスポンス情報
 
         """
-        key = {'userId': user_id}
-        expression = "set point=:point, pointExpirationDate=:expiration_date, updatedTime=:updated_time"  # noqa: E501
-        expression_value = {
-            ':point': point,
-            ':expiration_date': expiration_date,
-            ':updated_time': datetime.now(
-                gettz('Asia/Tokyo')).strftime("%Y/%m/%d %H:%M:%S")
-        }
-        return_value = "UPDATED_NEW"
-
+        user_ref = self._db.collection('MembersCardUserInfo').document(user_id)
         try:
-            response = self._update_item(key, expression,
-                                         expression_value, return_value)
+            response = user_ref.update({
+                'point': point,
+                'pointExpirationDate': expiration_date,
+                'updatedTime': datetime.now(
+                    gettz('Asia/Tokyo')).strftime("%Y/%m/%d %H:%M:%S")
+            })
         except Exception as e:
             raise e
         return response
-
+        
     def get_item(self, user_id):
         """
         データ取得
@@ -108,10 +105,14 @@ class MembersCardUserInfo(DynamoDB):
             会員ユーザー情報
 
         """
-        key = {'userId': user_id}
+        doc_ref = self._db.collection('MembersCardUserInfo').document(user_id)
 
         try:
-            item = self._get_item(key)
+            doc = doc_ref.get()
+            if doc.exists:
+                item = doc.to_dict()
+            else:
+                item = None
         except Exception as e:
             raise e
         return item

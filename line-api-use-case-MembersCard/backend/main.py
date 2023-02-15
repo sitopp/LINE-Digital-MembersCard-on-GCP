@@ -11,11 +11,16 @@ import logging
 import send_message
 from members_card_user_info import MembersCardUserInfo
 from common import utils
+from flask import Flask, request
 
-# 環境変数の宣言
-LOGGER_LEVEL = os.getenv('LOGGER_LEVEL')
-LIFF_CHANNEL_ID = os.getenv('LIFF_CHANNEL_ID', None)
-CHANNEL_ACCESS_TOKEN = os.getenv('CHANNEL_ACCESS_TOKEN')
+
+
+# 変数の宣言
+LOGGER_LEVEL = 'INFO'
+LIFF_CHANNEL_ID = 'xxxxxxxxxx'
+CHANNEL_ACCESS_TOKEN = 'xxxxxxxxxx'
+
+
 
 # ログ出力の設定
 logger = logging.getLogger()
@@ -24,13 +29,17 @@ if LOGGER_LEVEL == 'DEBUG':
 else:
     logger.setLevel(logging.INFO)
 
+
 # テーブル操作クラスの初期化
 user_info_table_controller = MembersCardUserInfo()
 
-def lambda_handler(event, context):
-    logger.info(event)
+app = Flask(__name__)
 
-    req_param = json.loads(event['body'])
+@app.route('/', methods=['POST'])
+def handler():
+    logger = logging.getLogger(__name__)
+    logger.setLevel(logging.INFO)
+    req_param = json.loads(request.data)
     
     # idTokenを検証し、ユーザーIDを取得
     # https://developers.line.biz/ja/reference/line-login/#verify-id-token
@@ -69,15 +78,18 @@ def lambda_handler(event, context):
     except Exception as e:
         logger.error(e)
         return utils.create_error_response('ERROR')
+
     success_response = json.dumps(result,
                                   default=utils.decimal_to_int,
                                   ensure_ascii=False)
+
     return utils.create_success_response(success_response)
 
 
 def init(user_id):
     """
-    初期表示時、新規ユーザーの場合会員データを作成する。
+    会員証を表示時、新規ユーザーの場合会員データを作成する。
+    既存ユーザーの場合、DBから会員データを取得する。
 
     Parameters
     ----------
@@ -167,3 +179,5 @@ def buy(user_id, language, liffId):
 
     return user_info
 
+    if __name__ == '__main__':
+        app.run(debug=True, host='0.0.0.0', port=int(os.environ.get('PORT', 8080)))

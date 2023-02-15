@@ -1,1 +1,6 @@
 line-bot-sdk==2.2.1
+firebase_admin==4.5.0
+bs4==0.0.1
+Flask 
+gunicorn
+python-dateutil==2.8.2
